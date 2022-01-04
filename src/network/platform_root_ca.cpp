@@ -61,29 +61,26 @@ static void add_macos_root_cas(boost::asio::ssl::context& ctx) {
                   SInt32 result = 0;
                   CFNumberGetValue(cfNum, kCFNumberSInt32Type, &result);
                   if(result == kSecTrustSettingsResultDeny)
-							untrusted = true;
-						else if (result == kSecTrustSettingsResultTrustAsRoot)
-							trust_as_root = true;
-						else if (result == kSecTrustSettingsResultTrustRoot)
-							trust_root = true;
-					}
-				}
+                    untrusted = true;
+                  else if (result == kSecTrustSettingsResultTrustAsRoot)
+                    trust_as_root = true;
+                  else if (result == kSecTrustSettingsResultTrustRoot)
+                    trust_root = true;
+               }
+            }
             CFRelease(trustSettings);
          }
 
          //double check that these manually trusted ones are actually CAs
          if(trust_root) {
-            CFErrorRef errRef = nullptr;
-            CFDataRef subjectName = SecCertificateCopyNormalizedSubjectContent(cert, &errRef);
-            if(errRef != nullptr) {
-               CFRelease(errRef);
-               continue;
+            CFDataRef subjectName = SecCertificateCopyNormalizedSubjectSequence(cert);
+            if(subjectName == nullptr) {
+              continue;
             }
-            CFDataRef issuerName = SecCertificateCopyNormalizedIssuerContent(cert, &errRef);
-            if(errRef != nullptr) {
-               CFRelease(subjectName);
-               CFRelease(errRef);
-               continue;
+            CFDataRef issuerName = SecCertificateCopyNormalizedIssuerSequence(cert);
+            if(issuerName == nullptr) {
+              CFRelease(subjectName);
+              continue;
             }
             Boolean equal = CFEqual(subjectName, issuerName);
             CFRelease(subjectName);
@@ -93,7 +90,7 @@ static void add_macos_root_cas(boost::asio::ssl::context& ctx) {
          }
 
          CFDataRef certAsPEM;
-         err = SecKeychainItemExport(cert, kSecFormatX509Cert, kSecItemPemArmour, nullptr, &certAsPEM);
+         err = SecItemExport(cert, kSecFormatX509Cert, kSecItemPemArmour, nullptr, &certAsPEM);
          if(err != noErr)
             continue;
          if(certAsPEM) {
