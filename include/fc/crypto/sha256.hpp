@@ -1,8 +1,7 @@
 #pragma once
-#include <fc/fwd.hpp>
 #include <fc/string.hpp>
 #include <fc/platform_independence.hpp>
-#include <fc/io/raw_fwd.hpp>
+#include <fc/crypto/hash.hpp>
 
 #include <boost/container_hash/hash.hpp>
 
@@ -35,21 +34,7 @@ class sha256
       return e.result(); 
     } 
 
-    class encoder 
-    {
-      public:
-        encoder();
-        ~encoder();
-
-        void write( const char* d, uint32_t dlen );
-        void put( char c ) { write( &c, 1 ); }
-        void reset();
-        sha256 result();
-
-      private:
-        struct      impl;
-        fc::fwd<impl,112> my;
-    };
+    using encoder = hash::encoder<sha256>;
 
     template<typename T>
     inline friend T& operator<<( T& ds, const sha256& ep ) {
@@ -108,6 +93,9 @@ class sha256
   void from_variant( const variant& v, sha256& bi );
 
   uint64_t hash64(const char* buf, size_t len);    
+
+  template<>
+  const EVP_MD* sha256::encoder::type;
 
 } // fc
 

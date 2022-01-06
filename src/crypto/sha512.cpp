@@ -9,6 +9,9 @@
 
 namespace fc {
 
+    template<>
+    const EVP_MD* sha512::encoder::type = EVP_sha512();
+
     sha512::sha512() { memset( _hash, 0, sizeof(_hash) ); }
     sha512::sha512( const string& hex_str ) {
       auto bytes_written = fc::from_hex( hex_str, (char*)_hash, sizeof(_hash) );
@@ -24,16 +27,6 @@ namespace fc {
     char* sha512::data() { return (char*)&_hash[0]; }
     const char* sha512::data()const { return (const char*)&_hash[0]; }
 
-
-    struct sha512::encoder::impl {
-       SHA512_CTX ctx;
-    };
-
-    sha512::encoder::~encoder() {}
-    sha512::encoder::encoder() {
-      reset();
-    }
-
     sha512 sha512::hash( const char* d, uint32_t dlen ) {
       encoder e;
       e.write(d,dlen);
@@ -41,18 +34,6 @@ namespace fc {
     }
     sha512 sha512::hash( const string& s ) {
       return hash( s.c_str(), s.size() );
-    }
-
-    void sha512::encoder::write( const char* d, uint32_t dlen ) {
-      SHA512_Update( &my->ctx, d, dlen);
-    }
-    sha512 sha512::encoder::result() {
-      sha512 h;
-      SHA512_Final((uint8_t*)h.data(), &my->ctx );
-      return h;
-    }
-    void sha512::encoder::reset() {
-      SHA512_Init( &my->ctx);
     }
 
     sha512 operator << ( const sha512& h1, uint32_t i ) {

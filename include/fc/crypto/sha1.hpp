@@ -1,6 +1,7 @@
 #pragma once
-#include <fc/fwd.hpp>
 #include <fc/string.hpp>
+#include <fc/crypto/hash.hpp>
+#include <fc/io/raw_fwd.hpp>
 
 namespace fc{
 
@@ -28,21 +29,7 @@ class sha1
       return e.result(); 
     } 
 
-    class encoder 
-    {
-      public:
-        encoder();
-        ~encoder();
-
-        void write( const char* d, uint32_t dlen );
-        void put( char c ) { write( &c, 1 ); }
-        void reset();
-        sha1 result();
-
-      private:
-        struct      impl;
-        fc::fwd<impl,96> my;
-    };
+    using encoder = hash::encoder<sha1>;
 
     template<typename T>
     inline friend T& operator<<( T& ds, const sha1& ep ) {
@@ -69,6 +56,9 @@ class sha1
   class variant;
   void to_variant( const sha1& bi, variant& v );
   void from_variant( const variant& v, sha1& bi );
+
+  template<>
+  const EVP_MD* sha1::encoder::type;
 
 } // namespace fc
 

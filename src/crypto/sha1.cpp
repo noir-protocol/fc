@@ -9,6 +9,8 @@
 
 namespace fc
 {
+template<>
+const EVP_MD* sha1::encoder::type = EVP_sha1();
 
 sha1::sha1() { memset( _hash, 0, sizeof(_hash) ); }
 sha1::sha1( const string& hex_str ) {
@@ -25,21 +27,6 @@ sha1::operator string()const { return  str(); }
 char* sha1::data() { return (char*)&_hash[0]; }
 const char* sha1::data()const { return (char*)&_hash[0]; }
 
-
-struct sha1::encoder::impl {
-  EVP_MD_CTX* ctx;
-
-  impl(): ctx(EVP_MD_CTX_new()) {
-    EVP_DigestInit(ctx, EVP_sha1());
-  }
-  ~impl() { EVP_MD_CTX_free(ctx); }
-};
-
-sha1::encoder::~encoder() {}
-sha1::encoder::encoder() {
-  reset();
-}
-
 sha1 sha1::hash( const char* d, uint32_t dlen ) {
   encoder e;
   e.write(d,dlen);
@@ -47,18 +34,6 @@ sha1 sha1::hash( const char* d, uint32_t dlen ) {
 }
 sha1 sha1::hash( const string& s ) {
   return hash( s.c_str(), s.size() );
-}
-
-void sha1::encoder::write( const char* d, uint32_t dlen ) {
-  EVP_DigestUpdate(my->ctx, d, dlen);
-}
-sha1 sha1::encoder::result() {
-  sha1 h;
-  EVP_DigestFinal(my->ctx, (uint8_t*)h.data(), nullptr);
-  return h;
-}
-void sha1::encoder::reset() {
-  EVP_DigestInit(my->ctx, EVP_sha1());
 }
 
 sha1 operator << ( const sha1& h1, uint32_t i ) {

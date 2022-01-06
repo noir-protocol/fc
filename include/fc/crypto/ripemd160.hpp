@@ -1,7 +1,6 @@
 #pragma once
 
-#include <fc/fwd.hpp>
-#include <fc/io/raw_fwd.hpp>
+#include <fc/crypto/hash.hpp>
 #include <fc/reflect/typename.hpp>
 
 namespace fc{
@@ -33,21 +32,7 @@ class ripemd160
       return e.result(); 
     } 
 
-    class encoder 
-    {
-      public:
-        encoder();
-        ~encoder();
-
-        void write( const char* d, uint32_t dlen );
-        void put( char c ) { write( &c, 1 ); }
-        void reset();
-        ripemd160 result();
-
-      private:
-        struct      impl;
-        fc::fwd<impl,96> my;
-    };
+    using encoder = hash::encoder<ripemd160>;
 
     template<typename T>
     inline friend T& operator<<( T& ds, const ripemd160& ep ) {
@@ -79,6 +64,9 @@ class ripemd160
   typedef ripemd160 uint160;
 
   template<> struct get_typename<uint160_t>    { static const char* name()  { return "uint160_t";  } };
+
+  template<>
+  const EVP_MD* ripemd160::encoder::type;
 
 } // namespace fc
 

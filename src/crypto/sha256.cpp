@@ -11,6 +11,9 @@
 
 namespace fc {
 
+    template<>
+    const EVP_MD* sha256::encoder::type = EVP_sha256();
+
     sha256::sha256() { memset( _hash, 0, sizeof(_hash) ); }
     sha256::sha256( const char *data, size_t size ) {
        if (size != sizeof(_hash))
@@ -31,16 +34,6 @@ namespace fc {
     const char* sha256::data()const { return (const char*)&_hash[0]; }
     char* sha256::data() { return (char*)&_hash[0]; }
 
-
-    struct sha256::encoder::impl {
-       SHA256_CTX ctx;
-    };
-
-    sha256::encoder::~encoder() {}
-    sha256::encoder::encoder() {
-      reset();
-    }
-
     sha256 sha256::hash( const char* d, uint32_t dlen ) {
       encoder e;
       e.write(d,dlen);
@@ -54,18 +47,6 @@ namespace fc {
     sha256 sha256::hash( const sha256& s )
     {
         return hash( s.data(), sizeof( s._hash ) );
-    }
-
-    void sha256::encoder::write( const char* d, uint32_t dlen ) {
-      SHA256_Update( &my->ctx, d, dlen);
-    }
-    sha256 sha256::encoder::result() {
-      sha256 h;
-      SHA256_Final((uint8_t*)h.data(), &my->ctx );
-      return h;
-    }
-    void sha256::encoder::reset() {
-      SHA256_Init( &my->ctx);
     }
 
     sha256 operator << ( const sha256& h1, uint32_t i ) {

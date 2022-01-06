@@ -9,6 +9,9 @@
 
 namespace fc {
 
+    template<>
+    const EVP_MD* sha224::encoder::type = EVP_sha224();
+
     sha224::sha224() { memset( _hash, 0, sizeof(_hash) ); }
     sha224::sha224( const string& hex_str ) {
       auto bytes_written = fc::from_hex( hex_str, (char*)_hash, sizeof(_hash) );
@@ -24,15 +27,6 @@ namespace fc {
     char* sha224::data() { return (char*)&_hash[0]; }
     const char* sha224::data() const { return (const char*)&_hash[0]; }
 
-    struct sha224::encoder::impl {
-       SHA256_CTX ctx;
-    };
-
-    sha224::encoder::~encoder() {}
-    sha224::encoder::encoder() {
-      reset();
-    }
-
     sha224 sha224::hash( const char* d, uint32_t dlen ) {
       encoder e;
       e.write(d,dlen);
@@ -40,18 +34,6 @@ namespace fc {
     }
     sha224 sha224::hash( const string& s ) {
       return hash( s.c_str(), s.size() );
-    }
-
-    void sha224::encoder::write( const char* d, uint32_t dlen ) {
-      SHA224_Update( &my->ctx, d, dlen);
-    }
-    sha224 sha224::encoder::result() {
-      sha224 h;
-      SHA224_Final((uint8_t*)h.data(), &my->ctx );
-      return h;
-    }
-    void sha224::encoder::reset() {
-      SHA224_Init( &my->ctx);
     }
 
     sha224 operator << ( const sha224& h1, uint32_t i ) {
