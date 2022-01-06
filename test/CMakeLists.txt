@@ -14,3 +14,4 @@ add_executable( test_filesystem test_filesystem.cpp )
 target_link_libraries( test_filesystem fc )
 
 add_test(NAME test_filesystem COMMAND libraries/fc/test/test_filesystem WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+
