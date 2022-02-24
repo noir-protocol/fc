@@ -214,3 +214,37 @@ install(TARGETS fc
    ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/fc DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR})
 
+
+include(CheckCXXSourceCompiles)
+
+# Check for SSE4.2 support in the compiler.
+set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /arch:AVX")
+else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -msse4.2")
+endif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+check_cxx_source_compiles("
+#if defined(_MSC_VER)
+#include <intrin.h>
+#else  // !defined(_MSC_VER)
+#include <cpuid.h>
+#include <nmmintrin.h>
+#endif  // defined(_MSC_VER)
+int main() {
+  _mm_crc32_u8(0, 0); _mm_crc32_u32(0, 0);
+#if defined(_M_X64) || defined(__x86_64__)
+   _mm_crc32_u64(0, 0);
+#endif // defined(_M_X64) || defined(__x86_64__)
+  return 0;
+}
+"  HAVE_SSE42)
+set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
+
+if(HAVE_SSE42)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(fc PRIVATE "/arch:AVX")
+  else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(fc PRIVATE "-msse4.2")
+  endif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+endif(HAVE_SSE42)
